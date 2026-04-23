@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AION — Race timing that gets out of the way</title>
+<meta name="description" content="AI-powered race timing for grass roots cycling events. Live RFID timing, instant results, racer insights and series standings — all in one.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --green: #22c55e;
+    --green-dark: #16a34a;
+    --green-light: #dcfce7;
+    --green-xlight: #f0fdf4;
+    --text: #111827;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --bg: #ffffff;
+    --surface: #f9fafb;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--green);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-icon svg { width: 18px; height: 18px; }
+  .logo-text { font-size: 18px; font-weight: 600; color: var(--text); }
+  .logo-text span { color: var(--green); }
+  .nav-cta {
+    background: var(--green);
+    color: white;
+    text-decoration: none;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  .nav-cta:hover { background: var(--green-dark); }
+
+  /* HERO */
+  .hero {
+    padding: 80px 24px 64px;
+    text-align: center;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-light);
+    color: var(--green-dark);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 100px;
+    border: 1px solid #bbf7d0;
+    margin-bottom: 24px;
+  }
+  .hero-badge-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+  }
+  .hero h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    max-width: 720px;
+    margin: 0 auto 16px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--green);
+  }
+  .tagline {
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--text-muted);
+    max-width: 580px;
+    margin: 0 auto 12px;
+    line-height: 1.7;
+  }
+  .punchline {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 520px;
+    margin: 0 auto 36px;
+    font-style: italic;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: var(--green);
+    color: white;
+    text-decoration: none;
+    padding: 14px 28px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    transition: background 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary:hover { background: var(--green-dark); }
+  .btn-secondary {
+    background: white;
+    color: var(--text);
+    text-decoration: none;
+    padding: 14px 28px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    transition: border-color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-secondary:hover { border-color: var(--green); color: var(--green-dark); }
+
+  /* SECTIONS */
+  section { padding: 72px 24px; }
+  section:nth-child(even) { background: var(--surface); }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--green-dark);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 600;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+  .section-desc {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+  }
+
+  /* FEATURE CARDS */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .card:hover {
+    border-color: #bbf7d0;
+    box-shadow: 0 4px 12px rgba(34,197,94,0.08);
+  }
+  .card-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--green-xlight);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .card-icon svg { width: 20px; height: 20px; stroke: var(--green-dark); }
+  .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+  /* HOW IT WORKS */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 32px;
+    position: relative;
+  }
+  .step { text-align: center; }
+  .step-num {
+    width: 48px;
+    height: 48px;
+    background: var(--green);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 auto 16px;
+  }
+  .step h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .step p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+  /* AI SECTION */
+  .ai-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  @media (max-width: 768px) { .ai-grid { grid-template-columns: 1fr; } }
+  .ai-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .ai-card-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--green-dark);
+    margin-bottom: 6px;
+  }
+  .ai-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; font-style: italic; }
+  .ai-card-name { font-size: 12px; font-weight: 500; margin-top: 8px; color: var(--text); }
+
+  /* HARDWARE */
+  .hardware-box {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 24px 0;
+  }
+  .flow-node {
+    background: var(--green-xlight);
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--green-dark);
+    text-align: center;
+  }
+  .flow-arrow {
+    color: var(--green);
+    font-size: 18px;
+    font-weight: 300;
+  }
+  .hardware-note {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  /* SOCIAL */
+  .social-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .social-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .social-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .social-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .social-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--green-light);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .social-icon svg { width: 18px; height: 18px; stroke: var(--green-dark); }
+
+  /* PRICING */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .pricing-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .pricing-card.featured {
+    border: 2px solid var(--green);
+    position: relative;
+  }
+  .featured-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green);
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 12px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .pricing-label { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; }
+  .pricing-price { font-size: 36px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .pricing-price span { font-size: 14px; font-weight: 400; color: var(--text-muted); }
+  .pricing-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+  .pricing-feature {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .check {
+    width: 16px;
+    height: 16px;
+    background: var(--green-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--green-dark);
+    font-size: 10px;
+  }
+
+  /* CTA */
+  .cta-section {
+    background: var(--green);
+    padding: 72px 24px;
+    text-align: center;
+  }
+  .cta-section h2 { font-size: clamp(24px, 4vw, 36px); font-weight: 600; color: white; margin-bottom: 12px; }
+  .cta-section p { font-size: 16px; color: rgba(255,255,255,0.85); margin-bottom: 32px; max-width: 520px; margin-left: auto; margin-right: auto; }
+  .btn-white {
+    background: white;
+    color: var(--green-dark);
+    text-decoration: none;
+    padding: 14px 32px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    display: inline-block;
+    transition: opacity 0.15s;
+  }
+  .btn-white:hover { opacity: 0.9; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .footer-inner { max-width: 1100px; margin: 0 auto; }
+  footer p { font-size: 13px; color: var(--text-muted); }
+  footer a { color: var(--green-dark); text-decoration: none; }
+
+  /* MOBILE */
+  @media (max-width: 640px) {
+    .hero { padding: 56px 20px 48px; }
+    section { padding: 48px 20px; }
+    .hero-actions { flex-direction: column; align-items: center; }
+    .btn-primary, .btn-secondary { width: 100%; max-width: 320px; justify-content: center; }
+    .steps { gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      </div>
+      <span class="logo-text">AION<span>Race</span></span>
+    </a>
+    <a href="https://aionhub.io" class="nav-cta">Open AION Hub →</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge"><span class="hero-badge-dot"></span> Now in beta — launching Sept 2026</div>
+  <h1>Race timing that gets out of the way.<br>So <em>pedaling hard</em> can be the hard part.</h1>
+  <p class="tagline">AION gives grass roots race promoters everything they need to run professional events — without the complexity, the spreadsheets, or the expensive dedicated timing crews.</p>
+  <p class="punchline">"Race timing logistics shouldn't be the hardest part of a bike race. Pedaling as hard as you can should be the hard part."</p>
+  <div class="hero-actions">
+    <a href="https://aionhub.io" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Launch AION Hub
+    </a>
+    <a href="#features" class="btn-secondary">See how it works</a>
+  </div>
+</div>
+
+<section id="features">
+  <div class="section-inner">
+    <p class="section-label">Features</p>
+    <h2 class="section-title">Everything a promoter needs. Nothing they don't.</h2>
+    <p class="section-desc">Built for the person who organizes the race, drives the van, sets up the course, AND runs the timing table.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h3>Live RFID timing</h3>
+        <p>Works with Impinj and other RFID readers out of the box. Sub-second lap detection. No laptops on the finish line, no manual counts.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <h3>Instant results</h3>
+        <p>Results publish the moment a race ends — by category, by lap count, with times. Share a link. Done.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Racer database</h3>
+        <p>One master database for all your racers. Import from BikeReg, add walk-ups on race day, track history across every event.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3>Series management</h3>
+        <p>Run a multi-race championship with automatic points tracking. Different points tables for Short Track vs XC. Standings update live.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <h3>AION Spoke + Word</h3>
+        <p>AI-generated personal race summaries for every racer, plus a full race narrative — a story that mentions every single rider by name.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        </div>
+        <h3>Works on any device</h3>
+        <p>Time from a tablet. Share results via QR code. Racers check standings on their phone. No app installs. Just a browser.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-inner">
+    <p class="section-label">How it works</p>
+    <h2 class="section-title">From chip read to results in seconds.</h2>
+    <p class="section-desc">AION connects your existing RFID hardware to a cloud timing platform via MQTT. No custom software on-site. No special laptops.</p>
+    <div class="hardware-box">
+      <div class="flow">
+        <div class="flow-node">Impinj reader<br><small style="font-weight:400;color:#6b7280">RFID antenna</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">HiveMQ Cloud<br><small style="font-weight:400;color:#6b7280">MQTT broker</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">AION Timer Sync<br><small style="font-weight:400;color:#6b7280">live matching</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">Live results<br><small style="font-weight:400;color:#6b7280">instant publish</small></div>
+      </div>
+      <p class="hardware-note">Compatible with Impinj R700, SpeedwayR and most LLRP-enabled readers. Chip reads reach your dashboard in under one second.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-inner">
+    <div class="ai-grid">
+      <div>
+        <p class="section-label">AION Spoke + Word</p>
+        <h2 class="section-title">AI insights every racer will share.</h2>
+        <p class="section-desc">After every race, AION generates a personal performance summary for each racer — their position, their battles, their best lap. Then it writes a full race narrative that names every single person who showed up. Parents share it. Racers screenshot it. Communities grow around it.</p>
+      </div>
+      <div>
+        <div class="ai-card">
+          <div class="ai-card-label">✦ AION Spoke — personal insight</div>
+          <p>"Connor absolutely flew in the Junior category today, crossing the line P1 with 8 clean laps. His pace through the middle section was relentless — Grayson pushed hard but never quite closed the gap, finishing just 14 seconds behind."</p>
+          <div class="ai-card-name">Connor Wiggins · Junior Male · P1/6</div>
+        </div>
+        <div class="ai-card">
+          <div class="ai-card-label">✦ AION Word — race narrative</div>
+          <p>"What a morning at Moab Short Track! The Junior field brought the heat early, with Connor setting the tone from lap one. Meanwhile in Sport Men, Chris and David staged an epic battle through the back section — never more than 8 seconds apart for the entire race..."</p>
+          <div class="ai-card-name">Full race story · Auto-generated · Shareable</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-inner">
+    <p class="section-label">Social engagement</p>
+    <h2 class="section-title">Built to spread. Not just to record.</h2>
+    <p class="section-desc">AION turns race data into content people actually want to share — driving engagement, growing your community, and bringing racers back.</p>
+    <div class="social-cards">
+      <div class="social-card">
+        <div class="social-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <h3>Racer cards with QR codes</h3>
+        <p>Each racer gets a personal card with their results and AI insight. Scan the QR to see full history. Post-worthy by design.</p>
+      </div>
+      <div class="social-card">
+        <div class="social-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <h3>Race story emails</h3>
+        <p>Send the AI race narrative to all participants automatically. They get a story about their race — with their name in it.</p>
+      </div>
+      <div class="social-card">
+        <div class="social-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3>Public results portal</h3>
+        <p>A clean, public results page anyone can access — search by name, filter by category, view full race history. No login required.</p>
+      </div>
+      <div class="social-card">
+        <div class="social-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </div>
+        <h3>AION Intel — racer profiles</h3>
+        <p>Every racer has a performance profile. Search anyone, see their full history, win rate, trends and AI analysis across all events.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-inner">
+    <p class="section-label">How to get started</p>
+    <h2 class="section-title">Up and running in under an hour.</h2>
+    <p class="section-desc">No dedicated timing crew. No expensive setup. Just your existing hardware and an internet connection.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Connect your reader</h3>
+        <p>Point your Impinj or compatible RFID reader at our HiveMQ broker. Takes 5 minutes with our setup guide.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Import your racers</h3>
+        <p>Upload a CSV or connect BikeReg. Add walk-ups on race day. Assign chips and plate numbers per entry.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Start the race</h3>
+        <p>Hit Start Race. Chip reads flow in. The live leaderboard updates automatically for every racer on every lap.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Finish and share</h3>
+        <p>Click Finish. Results publish instantly. AI insights generate for every racer. Share the race story. Done.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background: white;">
+  <div class="section-inner" style="text-align: center;">
+    <p class="section-label">Pricing</p>
+    <h2 class="section-title">Simple event-based pricing.</h2>
+    <p class="section-desc" style="margin: 0 auto 48px;">No subscriptions. No per-racer fees. Pay per event or get a season pass.</p>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-label">Single event</div>
+        <div class="pricing-price">$49 <span>/ event</span></div>
+        <div class="pricing-desc">Perfect for one-off races or trying AION for the first time.</div>
+        <div class="pricing-feature"><span class="check">✓</span> Up to 200 racers</div>
+        <div class="pricing-feature"><span class="check">✓</span> Live timing + results</div>
+        <div class="pricing-feature"><span class="check">✓</span> AION Spoke + Word AI</div>
+        <div class="pricing-feature"><span class="check">✓</span> Racer cards + QR codes</div>
+        <div class="pricing-feature"><span class="check">✓</span> Public results portal</div>
+      </div>
+      <div class="pricing-card featured">
+        <div class="featured-badge">Most popular</div>
+        <div class="pricing-label">Season pass</div>
+        <div class="pricing-price">$199 <span>/ season</span></div>
+        <div class="pricing-desc">Unlimited events all season. Includes full series management.</div>
+        <div class="pricing-feature"><span class="check">✓</span> Unlimited events</div>
+        <div class="pricing-feature"><span class="check">✓</span> Series + points system</div>
+        <div class="pricing-feature"><span class="check">✓</span> AION Intel racer profiles</div>
+        <div class="pricing-feature"><span class="check">✓</span> BikeReg import</div>
+        <div class="pricing-feature"><span class="check">✓</span> Priority support</div>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-label">Beta access</div>
+        <div class="pricing-price">Free <span>/ now</span></div>
+        <div class="pricing-desc">Full season pass access free until launch. Shape the product.</div>
+        <div class="pricing-feature"><span class="check">✓</span> Everything in Season pass</div>
+        <div class="pricing-feature"><span class="check">✓</span> Direct founder access</div>
+        <div class="pricing-feature"><span class="check">✓</span> 50% off for life at launch</div>
+        <div class="pricing-feature"><span class="check">✓</span> Founding member badge</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section style="background: #111827; color: white;">
+  <div class="section-inner" style="max-width: 800px; text-align: center;">
+    <p style="font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: #22c55e; margin-bottom: 12px;">Why AION</p>
+    <h2 style="font-size: clamp(24px, 4vw, 38px); font-weight: 600; color: white; line-height: 1.2; margin-bottom: 20px;">
+      Time isn't just a number.<br>It's a story.
+    </h2>
+    <p style="font-size: 16px; color: rgba(255,255,255,0.7); line-height: 1.8; margin-bottom: 32px;">
+      <strong style="color: white;">AION</strong> comes from the ancient Greek <em>αἰών</em> — not clock time (<em>chronos</em>), but the continuous, unbroken flow of time. The kind that connects every lap you've ever ridden into a single arc. The kind that makes a race more than a finishing position.
+    </p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; text-align: left; margin-bottom: 40px;">
+      <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+        <p style="font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: #22c55e; margin-bottom: 8px;">Chronos vs AION</p>
+        <p style="font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.7;">Chronos is the clock — minutes and seconds. AION is the journey — every race, every rival, every improvement over a season. We track both, but we care about the second one.</p>
+      </div>
+      <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+        <p style="font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: #22c55e; margin-bottom: 8px;">AI that understands context</p>
+        <p style="font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.7;">Our AI doesn't just report results — it reads the race. Who pushed whom. Who faded. Who found a gear in the final lap. Context that turns a timestamp into a story worth sharing.</p>
+      </div>
+      <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+        <p style="font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: #22c55e; margin-bottom: 8px;">Every racer, every race</p>
+        <p style="font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.7;">AION remembers. A junior racer's first podium. A masters rider's season-best lap. The moment someone finally beat their rival. The full arc — not just today's snapshot.</p>
+      </div>
+    </div>
+    <p style="font-size: 15px; color: rgba(255,255,255,0.5); font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px;">
+      "We named it AION because great races deserve more than a spreadsheet. They deserve a story."
+    </p>
+  </div>
+</section>
+
+<div class="cta-section">
+  <h2>Ready to make timing the easy part?</h2>
+  <p>Join promoters already using AION in beta. Free until September 2026.</p>
+  <a href="https://aionhub.io" class="btn-white">Open AION Hub — it's free →</a>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <p>© 2026 AION · <a href="https://aionhub.io">aionhub.io</a> · Built for grass roots racing</p>
+  </div>
+</footer>
+
+</body>
+</html>
