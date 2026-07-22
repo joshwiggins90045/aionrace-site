@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 72">
+  <g transform="translate(6,4)" fill="none" stroke="#22c55e" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="32" cy="21" r="14" stroke-width="3.4"/><path d="M32 21V12.5" stroke-width="3.4"/><path d="M32 21l6.5 3.5" stroke-width="3.4"/><circle cx="32" cy="21" r="2.1" fill="#22c55e" stroke="none"/>
+    <path d="M14 53h36" stroke-width="3.4"/><path d="M21 53c0-5-2-8-5-10.5" stroke-width="2.9"/><path d="M21 53c0-5 3-8 5.5-9.5" stroke-width="2.9"/><path d="M32 53c0-6 0-7.5 0-4.5" stroke-width="2.9"/><path d="M32 53c0-5 3-8 6.5-9.5" stroke-width="2.9"/><path d="M43 53c0-5 2-8 5-10.5" stroke-width="2.9"/><path d="M43 53c0-5-3-8-5.5-9.5" stroke-width="2.9"/>
+  </g>
+  <text x="82" y="34" font-family="system-ui,Segoe UI,Roboto,Arial,sans-serif" font-size="30" font-weight="800" letter-spacing="-0.5" fill="#0a0f0c">AION</text>
+  <text x="83" y="52" font-family="system-ui,Segoe UI,Roboto,Arial,sans-serif" font-size="10.5" font-weight="700" letter-spacing="2.4" fill="#16a34a">GRASS ROOTS RACE TIMING</text>
+</svg>
